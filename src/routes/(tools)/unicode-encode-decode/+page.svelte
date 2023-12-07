@@ -1,17 +1,46 @@
 <script lang="ts">
-
+	
 	import { Button } from 'flowbite-svelte';
 	import jsPDF from 'jspdf';
 	import Intro from '$lib/Intro.svelte';
 
 	export let data;
-
+	
+	export const caseConversionOptions = [
+		'Unicode Encoder',
+		'Unicode Decoder',
+		
+	];
+	
 	var output;
 
-	function generateoutput(input){
-		output = input.target.value.replace( /(<([^>]+)>)/ig, '');
-	}
+	var selectedOption;
 
+
+	function switchcase(input) {
+		switch (selectedOption) {
+
+			case "Unicode Encoder":
+				output = input.target.value
+					.split("")
+					.map((char) => char.charCodeAt(0))
+					.map((code)=>`U#+${code.toString(16)}`)
+					.join(" ");
+				break;
+
+			case "Unicode Decoder":
+				output = input.target.value
+					.split(" ")
+					.map((code) => String.fromCodePoint(parseInt(code.slice(3), 16)))
+					.join("");
+		  		break;
+
+			default:
+				output = input.target.value;
+				break;
+		}
+	}
+  
 	function copyText() {
 		if (output.length > 0) {
 			var textarea = document.createElement("textarea");
@@ -45,7 +74,7 @@
 		doc.text(output, 20, 20);
 		doc.save('devstar_output.pdf');
 	}
-
+	
 </script>
 
 <Intro heading={data.meta.title} description={data.meta.description} />
@@ -54,15 +83,24 @@
 	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:px-12">
 		<div class="card p-8 relative items-center mx-auto max-w-screen-xl overflow-hidden rounded-lg">
 
-			<div class="gap-4 items-center mx-auto max-w-screen-xl lg:grid lg:grid-cols-2 overflow-hidden">
-
+			<div class="rounded-lg overflow-hidden bg-gray-50 border border-gray-300">
+				<select bind:value={selectedOption}
+					class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+					{#each caseConversionOptions as option}
+					<option value={option}>{option}</option>
+					{/each}
+				</select>	
+			</div>
+						
+			<div class="mt-4 gap-4 items-center mx-auto max-w-screen-xl lg:grid lg:grid-cols-2 overflow-hidden">
+				
 				<div class="rounded-lg overflow-hidden bg-gray-50 border border-gray-300">
-					<textarea placeholder="Enter Text" rows="8" class="resize-none block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-					on:input={generateoutput}/>
+					<textarea placeholder="Enter Text" id="input-textarea-id" rows="8" name="message" class="resize-none block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+					on:input={switchcase}/>
 				</div>
 
 				<div class="rounded-lg overflow-hidden bg-gray-50 border border-gray-300">
-					<textarea placeholder="Result" rows="8" class="resize-none block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+					<textarea readOnly rows="8" placeholder="Result" class="resize-none block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 					bind:value={output}/>
 				</div>
 
